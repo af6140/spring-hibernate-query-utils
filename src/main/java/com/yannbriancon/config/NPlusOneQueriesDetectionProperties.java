@@ -1,10 +1,8 @@
 package com.yannbriancon.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.io.Serializable;
 
-@ConfigurationProperties("spring-hibernate-query-utils.n-plus-one-queries-detection")
 public class NPlusOneQueriesDetectionProperties implements Serializable {
     public enum ErrorLevel {
         INFO,

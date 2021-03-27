@@ -1,13 +1,13 @@
 package com.yannbriancon.interceptor;
 
 import com.yannbriancon.config.NPlusOneQueriesDetectionProperties;
+import com.yannbriancon.config.NPlusOneQueriesDetectionProperties.ErrorLevel;
 import com.yannbriancon.exception.NPlusOneQueriesException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Transaction;
+import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 import java.io.Serializable;
@@ -18,8 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-@Component
-@EnableConfigurationProperties(NPlusOneQueriesDetectionProperties.class)
 public class HibernateQueryInterceptor extends EmptyInterceptor {
 
     private transient ThreadLocal<Long> threadQueryCount = new ThreadLocal<>();
@@ -36,6 +34,13 @@ public class HibernateQueryInterceptor extends EmptyInterceptor {
 
     private static final String HIBERNATE_PROXY_PREFIX = "org.hibernate.proxy";
     private static final String PROXY_METHOD_PREFIX = "com.sun.proxy";
+
+    public HibernateQueryInterceptor(
+    ) {
+        this.NPlusOneQueriesDetectionProperties = new NPlusOneQueriesDetectionProperties();
+        this.NPlusOneQueriesDetectionProperties.setEnabled(true);
+        this.NPlusOneQueriesDetectionProperties.setErrorLevel(ErrorLevel.ERROR);
+    }
 
     public HibernateQueryInterceptor(
             NPlusOneQueriesDetectionProperties NPlusOneQueriesDetectionProperties
@@ -67,6 +72,7 @@ public class HibernateQueryInterceptor extends EmptyInterceptor {
      * Start or reset the query count to 0 for the considered thread
      */
     public void startQueryCount() {
+        System.out.println("On startQueryCount");
         threadQueryCount.set(0L);
     }
 
@@ -86,6 +92,7 @@ public class HibernateQueryInterceptor extends EmptyInterceptor {
      */
     @Override
     public String onPrepareStatement(String sql) {
+        System.out.println("On perpare");
         if (NPlusOneQueriesDetectionProperties.isEnabled()) {
             updateSelectQueriesInfoPerProxyMethod(sql);
         }
@@ -294,6 +301,13 @@ public class HibernateQueryInterceptor extends EmptyInterceptor {
             default:
                 break;
         }
+    }
+
+    @Override
+    public boolean onLoad(Object entity, Serializable id, Object[] state, String[] propertyNames,
+        Type[] types) {
+        System.out.println("onLoad interceptor");
+        return super.onLoad(entity, id, state, propertyNames, types);
     }
 }
 
